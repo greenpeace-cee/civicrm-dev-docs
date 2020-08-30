@@ -122,7 +122,7 @@ CiviCRM's strategy is as follows:
     1. For rich text, [purify inputs](inputs.md#input-purification)
 * Outputs:
     1. HTML:
-        * Do *not* perform HTML encoding for [data between tags](outputs.md#between-tags)
+        * *Sometimes* perform HTML encoding for [data between tags](outputs.md#between-tags) (depending on the data source)
         * *Do* perform HTML encoding for [data within attributes](outputs.md#in-attributes)
     1. SQL: [validate and encode](outputs.md#sql)
     1. Shell: [validate and encode](outputs.md#shell)

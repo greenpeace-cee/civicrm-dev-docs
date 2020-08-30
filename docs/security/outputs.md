@@ -6,29 +6,57 @@ Untrusted data placed in HTML must be [encoded](index.md#encoding) for HTML outp
 
 ### Between tags {:#db-between-tags}
 
+Whether data needs to be output encoded depends primarily on the data source:
+
 #### Database data between tags {:#db-between-tags}
 
-Data which comes out of MySQL has already been [partially encoded for HTML output](inputs.md#input-encoding). This means that when you place this data between HTML tags, you don't need to perform any output encoding. For example:
+Data which comes *directly* out of MySQL has already been [partially encoded for HTML output](inputs.md#input-encoding). This means that when you place this data between HTML tags, you don't need to perform any output encoding. For example:
+
+```php
+// in page class
+$dao = new CRM_Core_DAO();
+$dao->query('SELECT display_name FROM civicrm_contact');
+if ($dao->fetch()) {
+  // set template variable
+  $this->assign('displayName', $displayName);
+}
+```
 
 ```html
+<!-- in template -->
 <div>{$displayName}</div>
 ```
 
-#### Direct user input between tags {:#inputs-between-tags}
+#### API data or direct user input between tags {:#inputs-between-tags}
 
-Here we have a bit of a grey area where CiviCRM does not have a consistent approach. If untrusted inputs are placed into HTML before being saved to the database, you need to ensure to perform HTML output encoding *at some point*.
-
-You can perform the output encoding in PHP as follows:
+HTML output encoding needs to be performed *at some point* for any data that is fetched via the API as well as any untrusted user input that is placed into HTML before being saved to the database. The recommended approach is to perform output encoding in the template:
 
 ```php
-$userInput = htmlentities($userInput);
+// in page class
+$contacts = \Civi\Api4\Contact::get()
+  ->addSelect('display_name')
+  ->execute();
+foreach ($contacts as $contact) {
+  $this->assign('displayName', $contact['display_name']);
+}
 ```
 
-Or you can perform the output encoding in Smarty as follows:
-
 ```html
-<div>{$userInput|escape}</div>
-``` 
+<!-- in template -->
+<div>{$displayName|escape}</div>
+```
+
+Alternatively, you can encode before passing the value to the template:
+
+```php
+// in page class
+$contacts = \Civi\Api4\Contact::get()
+  ->addSelect('display_name')
+  ->execute();
+foreach ($contacts as $contact) {
+  $this->assign('displayName', htmlentities($contact['display_name']));
+}
+```
 
 !!! tip
     Be wary of using user input in *error messages*. This is a common scenario wherein untrusted user input can end up in HTML with no HTML output encoding.
